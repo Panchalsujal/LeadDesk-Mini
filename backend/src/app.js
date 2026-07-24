@@ -9,6 +9,9 @@ import { generalRateLimiter } from "./ratelimitation/user.rate.js";
 
 const app = express();
 
+// Trust proxy for Vercel/reverse proxies so express-rate-limit works properly
+app.set("trust proxy", 1);
+
 const allowedOrigins = [
   "https://lead-desk-mini-virid.vercel.app",
   "http://localhost:5173",
@@ -39,7 +42,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
+app.options("(.*)", cors(corsOptions));
 app.use(morgan("dev"));
 app.use(express.json());
 app.use(cookieParser());
