@@ -17,3 +17,13 @@ export const fetchLeads = async () => {
   const response = await api.get('/lead/get-leads');
   return response.data;
 };
+
+/**
+ * Update lead status by ID (requires auth)
+ * @param {string} id
+ * @param {string} status - 'NEW' | 'CONTACTED' | 'CLOSED'
+ */
+export const updateLeadStatus = async (id, status) => {
+  const response = await api.patch(`/lead/update-lead/${id}`, { status });
+  return response.data;
+};

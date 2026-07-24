@@ -1,13 +1,11 @@
-// Auth context — manages user state globally
+// Auth context — manages user state globally + token storage
 import { createContext, useContext, useState, useCallback } from 'react';
 
 const AuthContext = createContext(null);
 
 const USER_STORAGE_KEY = 'leaddesk_user';
+const TOKEN_STORAGE_KEY = 'leaddesk_token';
 
-/**
- * Reads user from localStorage
- */
 const getUserFromStorage = () => {
   try {
     const stored = localStorage.getItem(USER_STORAGE_KEY);
@@ -20,13 +18,17 @@ const getUserFromStorage = () => {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => getUserFromStorage());
 
-  const login = useCallback((userData) => {
+  const login = useCallback((userData, token) => {
     localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData));
+    if (token) {
+      localStorage.setItem(TOKEN_STORAGE_KEY, token);
+    }
     setUser(userData);
   }, []);
 
   const logout = useCallback(() => {
     localStorage.removeItem(USER_STORAGE_KEY);
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
     setUser(null);
   }, []);
 
@@ -40,9 +42,6 @@ export function AuthProvider({ children }) {
   );
 }
 
-/**
- * Hook to access auth context
- */
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth must be used inside <AuthProvider>');

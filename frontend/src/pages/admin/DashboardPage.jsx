@@ -1,6 +1,7 @@
 // DashboardPage — admin overview with lead stats
 import { useLeads } from '../../hooks/useLeads';
 import { Users, TrendingUp, CheckCircle2, Phone, RefreshCw } from 'lucide-react';
+import StatusDropdown from '../../components/StatusDropdown';
 
 function StatCard({ icon: Icon, label, value, color, bgColor, borderColor }) {
   return (
@@ -27,7 +28,7 @@ function StatCard({ icon: Icon, label, value, color, bgColor, borderColor }) {
 }
 
 export default function DashboardPage() {
-  const { leads, loading, stats, refetch } = useLeads();
+  const { leads, loading, stats, refetch, updateStatus } = useLeads();
 
   const statCards = [
     {
@@ -132,7 +133,11 @@ export default function DashboardPage() {
                     <td>{lead.email}</td>
                     <td>{lead.budget}</td>
                     <td>
-                      <span className={`badge-${lead.status.toLowerCase()}`}>{lead.status}</span>
+                      <StatusDropdown
+                        leadId={lead._id}
+                        currentStatus={lead.status}
+                        onUpdateStatus={updateStatus}
+                      />
                     </td>
                     <td>{new Date(lead.createdAt).toLocaleDateString('en-US', {
                       month: 'short', day: 'numeric', year: 'numeric',

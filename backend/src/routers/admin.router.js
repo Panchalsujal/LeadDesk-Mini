@@ -9,4 +9,5 @@ router.post("/register", registerFirstAdmin);
 router.post("/admin/register",requireSuperAdmin, registerEmployee);
 router.post("/login", login);
 
+
 export default router;

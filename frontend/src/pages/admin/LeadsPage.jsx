@@ -1,12 +1,13 @@
 // LeadsPage — full leads table with search and filter
-import { useState, useMemo } from 'react';
+import { useState, useMemo, Fragment } from 'react';
 import { useLeads } from '../../hooks/useLeads';
 import { Search, RefreshCw, Users, Mail, DollarSign, MessageSquare } from 'lucide-react';
+import StatusDropdown from '../../components/StatusDropdown';
 
 const STATUS_FILTERS = ['ALL', 'NEW', 'CONTACTED', 'CLOSED'];
 
 export default function LeadsPage() {
-  const { leads, loading, stats, refetch } = useLeads();
+  const { leads, loading, stats, refetch, updateStatus } = useLeads();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [expandedId, setExpandedId] = useState(null);
@@ -134,9 +135,8 @@ export default function LeadsPage() {
               </thead>
               <tbody>
                 {filtered.map((lead) => (
-                  <>
+                  <Fragment key={lead._id}>
                     <tr
-                      key={lead._id}
                       onClick={() => setExpandedId(expandedId === lead._id ? null : lead._id)}
                       style={{ cursor: 'pointer' }}
                     >
@@ -151,13 +151,17 @@ export default function LeadsPage() {
                         </span>
                       </td>
                       <td>
-                        <span className={`badge-${lead.status.toLowerCase()}`}>{lead.status}</span>
+                        <StatusDropdown
+                          leadId={lead._id}
+                          currentStatus={lead.status}
+                          onUpdateStatus={updateStatus}
+                        />
                       </td>
                       <td style={{ whiteSpace: 'nowrap' }}>{formatDate(lead.createdAt)}</td>
                     </tr>
                     {/* Expanded message row */}
                     {expandedId === lead._id && (
-                      <tr key={`${lead._id}-expanded`}>
+                      <tr>
                         <td colSpan={6} style={{ padding: '0 1.25rem 1rem' }}>
                           <div className="p-4 rounded-xl text-sm" style={{
                             background: 'rgba(139, 92, 246, 0.07)',
@@ -170,7 +174,7 @@ export default function LeadsPage() {
                         </td>
                       </tr>
                     )}
-                  </>
+                  </Fragment>
                 ))}
               </tbody>
             </table>

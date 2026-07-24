@@ -15,7 +15,7 @@ export function useLogin() {
     try {
       const data = await loginUser(credentials);
       if (data.success) {
-        login(data.user);
+        login(data.user, data.token);
         toast.success(`Welcome back, ${data.user.name}!`);
         navigate('/admin/dashboard');
       }

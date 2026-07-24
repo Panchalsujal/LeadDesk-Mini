@@ -1,7 +1,7 @@
-// useLeads hook — fetches all leads for admin dashboard
+// useLeads hook — fetches all leads and handles status updates
 import { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { fetchLeads } from '../services/lead.service';
+import { fetchLeads, updateLeadStatus } from '../services/lead.service';
 
 export function useLeads() {
   const [leads, setLeads] = useState([]);
@@ -29,6 +29,25 @@ export function useLeads() {
     load();
   }, [load]);
 
+  const updateStatus = useCallback(async (id, newStatus) => {
+    try {
+      const data = await updateLeadStatus(id, newStatus);
+      if (data.success) {
+        toast.success(`Lead status updated to ${newStatus}`);
+        setLeads((prevLeads) =>
+          prevLeads.map((lead) =>
+            lead._id === id ? { ...lead, status: newStatus } : lead
+          )
+        );
+        return true;
+      }
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Failed to update lead status.';
+      toast.error(msg);
+      return false;
+    }
+  }, []);
+
   // Derived stats
   const stats = {
     total: leads.length,
@@ -37,5 +56,5 @@ export function useLeads() {
     closed: leads.filter((l) => l.status === 'CLOSED').length,
   };
 
-  return { leads, loading, error, stats, refetch: load };
+  return { leads, loading, error, stats, refetch: load, updateStatus };
 }

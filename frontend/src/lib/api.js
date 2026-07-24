@@ -11,9 +11,17 @@ const api = axios.create({
   },
 });
 
-// Request interceptor - attach token if in localStorage
+// Request interceptor - attach token if present
 api.interceptors.request.use(
   (config) => {
+    try {
+      const storedToken = localStorage.getItem('leaddesk_token');
+      if (storedToken) {
+        config.headers.Authorization = `Bearer ${storedToken}`;
+      }
+    } catch {
+      // Ignore localStorage errors
+    }
     return config;
   },
   (error) => Promise.reject(error)
@@ -24,9 +32,11 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Clear user data on unauthorized
       localStorage.removeItem('leaddesk_user');
-      window.location.href = '/login';
+      localStorage.removeItem('leaddesk_token');
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

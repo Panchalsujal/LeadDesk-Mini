@@ -79,7 +79,7 @@ export const registerEmployee = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error in registerFirstAdmin:", error);
+    console.error("Error in registerEmployee:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -106,22 +106,25 @@ export const login = async (req, res) => {
         message: "Invalid email or password",
       });
     }
+
     const token = jwt.sign(
       { id: user._id, role: user.role },
       config.JWT_SECRET,
       {
-        expiresIn: "1h", // Token expiration
-      },
+        expiresIn: "1h",
+      }
     );
 
     res.cookie("token", token, {
       httpOnly: true,
       sameSite: "lax",
-      maxAge: 60 * 60 * 1000, // 1 hour
+      maxAge: 60 * 60 * 1000,
     });
+
     return res.status(200).json({
       success: true,
       message: "Login successful",
+      token, // Send token in response body as well
       user: {
         id: user._id,
         name: user.name,
