@@ -115,9 +115,12 @@ export const login = async (req, res) => {
       }
     );
 
+    const isProduction = process.env.NODE_ENV === "production" || process.env.VERCEL === "1";
+
     res.cookie("token", token, {
       httpOnly: true,
-      sameSite: "lax",
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax",
       maxAge: 60 * 60 * 1000,
     });
 
@@ -140,3 +143,26 @@ export const login = async (req, res) => {
     });
   }
 };
+
+export const getCurrentUser = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthenticated",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      user: req.user,
+    });
+  } catch (error) {
+    console.error("Error in getCurrentUser:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+

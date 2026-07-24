@@ -27,3 +27,12 @@ export const registerEmployee = async (data) => {
   const response = await api.post('/auth/admin/register', data);
   return response.data;
 };
+
+/**
+ * Fetch current authenticated user details
+ */
+export const getCurrentUser = async () => {
+  const response = await api.get('/auth/user');
+  return response.data;
+};
+
