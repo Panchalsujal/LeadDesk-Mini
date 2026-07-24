@@ -101,7 +101,7 @@ export default function StatusDropdown({ leadId, currentStatus, onUpdateStatus }
         createPortal(
           <div
             ref={portalRef}
-            className="fixed z-[9999] w-40 rounded-xl p-1.5 shadow-2xl animate-fade-in-up"
+            className="fixed z-9999 w-40 rounded-xl p-1.5 shadow-2xl animate-fade-in-up"
             style={{
               top: `${coords.top}px`,
               left: `${coords.left}px`,
