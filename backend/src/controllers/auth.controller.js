@@ -115,7 +115,12 @@ export const login = async (req, res) => {
       }
     );
 
-    const isProduction = process.env.NODE_ENV === "production" || process.env.VERCEL === "1";
+    const isProduction =
+      process.env.NODE_ENV === "production" ||
+      Boolean(process.env.VERCEL) ||
+      Boolean(process.env.RENDER) ||
+      req.secure ||
+      req.headers["x-forwarded-proto"] === "https";
 
     res.cookie("token", token, {
       httpOnly: true,

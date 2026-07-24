@@ -48,7 +48,22 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options("(.*)", cors(corsOptions));
+
+// Explicit fallback middleware to ensure CORS headers are present on all responses, including errors & OPTIONS preflights
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin) {
+    const sanitized = origin.replace(/\/$/, "");
+    res.setHeader("Access-Control-Allow-Origin", sanitized);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Accept");
+  }
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+  next();
+});
 app.use(morgan("dev"));
 app.use(express.json());
 app.use(cookieParser());
