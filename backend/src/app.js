@@ -13,7 +13,34 @@ const app = express();
 app.set("trust proxy", 1);
 
 
+const allowedOrigins = [
+  "https://leaddesk-mini-3.onrender.com",
+  "https://lead-desk-mini-virid.vercel.app",
+  "https://lead-desk-mini-gold.vercel.app",
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "http://127.0.0.1:5173",
+];
+
 const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, Postman, curl, or server-to-server)
+    if (!origin) return callback(null, true);
+
+    const sanitizedOrigin = origin.replace(/\/$/, "");
+
+    if (
+      allowedOrigins.includes(sanitizedOrigin) ||
+      sanitizedOrigin.endsWith(".vercel.app") ||
+      sanitizedOrigin.endsWith(".onrender.com") ||
+      sanitizedOrigin.startsWith("http://localhost:") ||
+      sanitizedOrigin.startsWith("http://127.0.0.1:")
+    ) {
+      return callback(null, true);
+    }
+
+    return callback(null, true);
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
@@ -21,6 +48,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+app.options("(.*)", cors(corsOptions));
 app.use(morgan("dev"));
 app.use(express.json());
 app.use(cookieParser());
