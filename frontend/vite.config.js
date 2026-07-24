@@ -8,7 +8,7 @@ export default defineConfig({
 
   server: {
     "/api": {
-      target: "http://localhost:3000",
+      target: "https://lead-desk-mini-virid.vercel.app/",
       changeOrigin: true,
       secure: false,
       rewrite: (path) => path.replace(/^\/api/, ""),
