@@ -1,125 +1,185 @@
-// DashboardPage — admin overview with lead stats
+// DashboardPage — premium admin overview with KPIs, charts, and recent leads table
+import { useMemo } from 'react';
 import { useLeads } from '../../hooks/useLeads';
-import { Users, TrendingUp, CheckCircle2, Phone, RefreshCw } from 'lucide-react';
+import {
+  Users, TrendingUp, Phone, CheckCircle2, RefreshCw, ArrowRight,
+} from 'lucide-react';
+import { Link } from 'react-router-dom';
+import KpiCard     from '../../components/ui/KpiCard';
+import PageHeader  from '../../components/ui/PageHeader';
+import Avatar      from '../../components/ui/Avatar';
+import Badge       from '../../components/ui/Badge';
+import Spinner     from '../../components/ui/Spinner';
+import LeadBarChart   from '../../components/charts/LeadBarChart';
+import LeadDonutChart from '../../components/charts/LeadDonutChart';
 import StatusDropdown from '../../components/StatusDropdown';
 
-function StatCard({ icon: Icon, label, value, color, bgColor, borderColor }) {
-  return (
-    <div className="glass-card p-6 relative overflow-hidden" style={{
-      borderColor,
-    }}>
-      {/* Glow effect */}
-      <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full" style={{
-        background: bgColor,
-        filter: 'blur(30px)',
-      }} />
-      <div className="relative z-10">
-        <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4" style={{
-          background: bgColor,
-          border: `1px solid ${borderColor}`,
-        }}>
-          <Icon size={20} color={color} />
-        </div>
-        <p className="text-3xl font-extrabold mb-1" style={{ color: '#e0e3e5' }}>{value}</p>
-        <p className="text-sm" style={{ color: '#958ea0' }}>{label}</p>
-      </div>
-    </div>
-  );
+// Build weekly bar chart data from leads array
+function buildChartData(leads) {
+  const weeks = {};
+  leads.forEach((lead) => {
+    const d = new Date(lead.createdAt);
+    const weekStart = new Date(d);
+    weekStart.setDate(d.getDate() - d.getDay());
+    const key = weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    if (!weeks[key]) weeks[key] = { label: key, New: 0, Contacted: 0, Closed: 0 };
+    if (lead.status === 'NEW')       weeks[key].New++;
+    if (lead.status === 'CONTACTED') weeks[key].Contacted++;
+    if (lead.status === 'CLOSED')    weeks[key].Closed++;
+  });
+  return Object.values(weeks).slice(-6);
 }
 
 export default function DashboardPage() {
   const { leads, loading, stats, refetch, updateStatus } = useLeads();
 
-  const statCards = [
+  const chartData = useMemo(() => buildChartData(leads), [leads]);
+
+  const kpiCards = [
     {
       icon: Users,
       label: 'Total Leads',
       value: stats.total,
-      color: '#a78bfa',
-      bgColor: 'rgba(139, 92, 246, 0.15)',
-      borderColor: 'rgba(139, 92, 246, 0.25)',
+      color: '#4f46e5',
+      bgColor: '#eef2ff',
+      trend: 12,
+      trendLabel: 'vs last month',
+      delay: 0,
     },
     {
       icon: TrendingUp,
       label: 'New Leads',
       value: stats.newLeads,
-      color: '#d946ef',
-      bgColor: 'rgba(217, 70, 239, 0.15)',
-      borderColor: 'rgba(217, 70, 239, 0.25)',
+      color: '#7c3aed',
+      bgColor: '#ede9fe',
+      trend: 8,
+      trendLabel: 'vs last month',
+      delay: 50,
     },
     {
       icon: Phone,
       label: 'Contacted',
       value: stats.contacted,
-      color: '#60a5fa',
-      bgColor: 'rgba(59, 130, 246, 0.15)',
-      borderColor: 'rgba(59, 130, 246, 0.25)',
+      color: '#d97706',
+      bgColor: '#fef3c7',
+      trend: -3,
+      trendLabel: 'vs last month',
+      delay: 100,
     },
     {
       icon: CheckCircle2,
       label: 'Closed',
       value: stats.closed,
-      color: '#4ade80',
-      bgColor: 'rgba(34, 197, 94, 0.15)',
-      borderColor: 'rgba(34, 197, 94, 0.25)',
+      color: '#16a34a',
+      bgColor: '#dcfce7',
+      trend: 21,
+      trendLabel: 'vs last month',
+      delay: 150,
     },
   ];
 
   return (
-    <div className="p-8">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold" style={{ color: '#e0e3e5' }}>Dashboard</h1>
-          <p className="text-sm mt-1" style={{ color: '#958ea0' }}>Overview of all your leads and activity</p>
-        </div>
+    <div>
+      <PageHeader
+        title="Dashboard"
+        subtitle="Welcome back! Here's what's happening with your leads."
+      >
         <button
           onClick={refetch}
           disabled={loading}
-          className="btn-secondary flex items-center gap-2 py-2 px-4 text-sm"
+          className="btn-outline gap-1.5 h-9"
         >
-          <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
+          <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
           Refresh
         </button>
-      </div>
+      </PageHeader>
 
-      {/* Stats grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-        {statCards.map((card) => (
-          <StatCard key={card.label} {...card} />
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+        {kpiCards.map((card) => (
+          <KpiCard key={card.label} {...card} />
         ))}
       </div>
 
-      {/* Recent leads table */}
-      <div className="glass-card overflow-hidden">
-        <div className="p-5 flex items-center justify-between" style={{
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
-        }}>
-          <h2 className="font-semibold" style={{ color: '#e0e3e5' }}>Recent Leads</h2>
-          <span className="text-xs px-2 py-0.5 rounded-full" style={{
-            background: 'rgba(139, 92, 246, 0.15)',
-            color: '#a78bfa',
-            border: '1px solid rgba(139, 92, 246, 0.25)',
-          }}>
-            {stats.total} total
-          </span>
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+        {/* Bar Chart */}
+        <div className="card p-5 lg:col-span-2">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-sm font-semibold text-gray-900">Leads Over Time</h2>
+              <p className="text-xs text-gray-400 mt-0.5">Weekly breakdown by status</p>
+            </div>
+          </div>
+          {loading ? (
+            <div className="flex items-center justify-center h-48">
+              <Spinner size="lg" />
+            </div>
+          ) : (
+            <LeadBarChart data={chartData} />
+          )}
+        </div>
+
+        {/* Donut Chart */}
+        <div className="card p-5">
+          <div className="mb-2">
+            <h2 className="text-sm font-semibold text-gray-900">Status Distribution</h2>
+            <p className="text-xs text-gray-400 mt-0.5">Breakdown by current status</p>
+          </div>
+          {loading ? (
+            <div className="flex items-center justify-center h-48">
+              <Spinner size="lg" />
+            </div>
+          ) : (
+            <>
+              <LeadDonutChart stats={stats} />
+              <div className="mt-2 space-y-2">
+                {[
+                  { label: 'New',       value: stats.newLeads,  cls: 'bg-indigo-400' },
+                  { label: 'Contacted', value: stats.contacted, cls: 'bg-orange-400' },
+                  { label: 'Closed',    value: stats.closed,    cls: 'bg-green-400'  },
+                ].map(({ label, value, cls }) => (
+                  <div key={label} className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${cls}`} />
+                      <span className="text-gray-500">{label}</span>
+                    </div>
+                    <span className="font-medium text-gray-700">{value}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Recent Leads Table */}
+      <div className="card overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <div>
+            <h2 className="text-sm font-semibold text-gray-900">Recent Leads</h2>
+            <p className="text-xs text-gray-400 mt-0.5">Latest {Math.min(leads.length, 10)} of {stats.total} leads</p>
+          </div>
+          <Link to="/admin/leads" className="btn-outline text-xs h-8 gap-1">
+            View All <ArrowRight size={13} />
+          </Link>
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <span className="w-8 h-8 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
+            <Spinner size="lg" />
           </div>
         ) : leads.length === 0 ? (
-          <div className="text-center py-16" style={{ color: '#958ea0' }}>
-            <Users size={40} className="mx-auto mb-3 opacity-30" />
-            <p>No leads yet. Share your lead capture page!</p>
+          <div className="text-center py-16">
+            <Users size={40} className="mx-auto mb-3 text-gray-200" />
+            <p className="text-sm text-gray-400">No leads yet. Share your lead capture page!</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Name</th>
+                  <th>Lead</th>
                   <th>Email</th>
                   <th>Budget</th>
                   <th>Status</th>
@@ -129,9 +189,16 @@ export default function DashboardPage() {
               <tbody>
                 {leads.slice(0, 10).map((lead) => (
                   <tr key={lead._id}>
-                    <td className="font-medium" style={{ color: '#e0e3e5' }}>{lead.name}</td>
-                    <td>{lead.email}</td>
-                    <td>{lead.budget}</td>
+                    <td>
+                      <div className="flex items-center gap-2.5">
+                        <Avatar name={lead.name} size="sm" />
+                        <span className="font-medium text-gray-800">{lead.name}</span>
+                      </div>
+                    </td>
+                    <td className="text-gray-500">{lead.email}</td>
+                    <td>
+                      <span className="badge badge-indigo">{lead.budget}</span>
+                    </td>
                     <td>
                       <StatusDropdown
                         leadId={lead._id}
@@ -139,9 +206,11 @@ export default function DashboardPage() {
                         onUpdateStatus={updateStatus}
                       />
                     </td>
-                    <td>{new Date(lead.createdAt).toLocaleDateString('en-US', {
-                      month: 'short', day: 'numeric', year: 'numeric',
-                    })}</td>
+                    <td className="text-gray-400 whitespace-nowrap text-xs">
+                      {new Date(lead.createdAt).toLocaleDateString('en-US', {
+                        month: 'short', day: 'numeric', year: 'numeric',
+                      })}
+                    </td>
                   </tr>
                 ))}
               </tbody>

@@ -1,7 +1,7 @@
-// RegisterPage — first-time super admin registration (only works once)
+// RegisterPage — first-time super admin registration (white + indigo theme)
 import { useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { Zap, User, Mail, Lock, ShieldCheck, Eye, EyeOff } from 'lucide-react';
+import { Zap, User, Mail, Lock, ShieldCheck, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { registerFirstAdmin } from '../services/auth.service';
 import { useAuth } from '../contexts/AuthContext';
@@ -12,15 +12,30 @@ export default function RegisterPage() {
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
 
   if (isAuthenticated) return <Navigate to="/admin/dashboard" replace />;
 
-  const onChange = (e) => setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
+  const onChange = (e) => {
+    setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
+    setErrors((p) => ({ ...p, [e.target.name]: '' }));
+  };
+
+  const validate = () => {
+    const e = {};
+    if (!form.name?.trim()) e.name = 'Full name is required';
+    if (!form.email?.trim()) e.email = 'Email is required';
+    else if (!/\S+@\S+\.\S+/.test(form.email)) e.email = 'Enter a valid email';
+    if (!form.password) e.password = 'Password is required';
+    else if (form.password.length < 6) e.password = 'Password must be at least 6 characters';
+    return e;
+  };
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    if (form.password.length < 6) {
-      toast.error('Password must be at least 6 characters.');
+    const errs = validate();
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs);
       return;
     }
     setLoading(true);
@@ -30,7 +45,7 @@ export default function RegisterPage() {
         toast.success('Super Admin account created! Please sign in.');
         navigate('/login');
       } else {
-        toast.error(data.message);
+        toast.error(data.message || 'Registration failed.');
       }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Registration failed.');
@@ -40,59 +55,44 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
-      {/* Ambient orbs */}
-      <div className="orb orb-purple animate-pulse-glow"
-        style={{ width: '500px', height: '500px', top: '-100px', right: '-100px', opacity: 0.45 }} />
-      <div className="orb orb-blue"
-        style={{ width: '350px', height: '350px', bottom: '-80px', left: '-60px', opacity: 0.3 }} />
-
-      <div className="relative z-10 w-full max-w-md px-6">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+      <div className="w-full max-w-md">
         {/* Back link */}
-        <Link to="/login" className="flex items-center gap-2 text-sm mb-8" style={{ color: '#958ea0' }}>
-          <span>←</span> Back to Login
+        <Link to="/login" className="inline-flex items-center gap-1 text-sm font-medium text-gray-500 hover:text-gray-900 mb-6 transition-colors">
+          <ArrowRight size={14} className="rotate-180" /> Back to Login
         </Link>
 
-        {/* Logo */}
-        <div className="flex items-center gap-3 mb-8">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{
-            background: 'linear-gradient(135deg, #7c3aed, #d946ef)',
-          }}>
+        {/* Header / Logo */}
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
             <Zap size={20} color="white" />
           </div>
           <div>
-            <p className="text-xl font-bold" style={{ color: '#e0e3e5' }}>LeadDesk</p>
-            <p className="text-xs" style={{ color: '#958ea0' }}>Initial Setup</p>
+            <h1 className="text-xl font-bold text-gray-900 tracking-tight">LeadDesk</h1>
+            <p className="text-xs text-gray-500">Initial Setup</p>
           </div>
         </div>
 
-        {/* Card */}
-        <div className="glass-card p-8 animate-fade-in-up">
-          {/* Banner */}
-          <div className="flex items-center gap-3 p-3 rounded-xl mb-6" style={{
-            background: 'rgba(139, 92, 246, 0.1)',
-            border: '1px solid rgba(139, 92, 246, 0.25)',
-          }}>
-            <ShieldCheck size={20} style={{ color: '#a78bfa', flexShrink: 0 }} />
-            <p className="text-xs" style={{ color: '#cbc3d7' }}>
-              This registration is for the <strong style={{ color: '#a78bfa' }}>Super Admin</strong> account only.
-              It can only be created once. Future accounts must be created by the Super Admin.
+        {/* Form Card */}
+        <div className="card p-8">
+          {/* Info Banner */}
+          <div className="flex items-start gap-3 p-3.5 bg-indigo-50 border border-indigo-100 rounded-xl mb-6">
+            <ShieldCheck size={18} className="text-indigo-600 shrink-0 mt-0.5" />
+            <p className="text-xs text-indigo-900 leading-relaxed">
+              This registration sets up the <strong className="font-semibold text-indigo-700">Super Admin</strong> account.
+              Future team members are created via the Admin Panel.
             </p>
           </div>
 
-          <h1 className="text-2xl font-bold mb-2" style={{ color: '#e0e3e5' }}>
-            Create Super Admin
-          </h1>
-          <p className="mb-6 text-sm" style={{ color: '#cbc3d7' }}>
-            Set up the first administrator account for your LeadDesk system.
-          </p>
+          <h2 className="text-xl font-bold text-gray-900 mb-1">Create Super Admin</h2>
+          <p className="text-sm text-gray-500 mb-6">Set up the first administrator account for your workspace</p>
 
-          <form onSubmit={onSubmit} className="flex flex-col gap-5">
+          <form onSubmit={onSubmit} className="space-y-4" noValidate>
             {/* Name */}
             <div>
-              <label className="block text-sm font-semibold mb-2" style={{ color: '#cbc3d7' }}>Full Name</label>
+              <label htmlFor="register-name" className="form-label">Full Name</label>
               <div className="relative">
-                <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#958ea0' }} />
+                <User size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                 <input
                   id="register-name"
                   type="text"
@@ -100,17 +100,19 @@ export default function RegisterPage() {
                   value={form.name}
                   onChange={onChange}
                   placeholder="Your full name"
-                  className="form-input pl-10"
+                  className={`form-input pl-9 h-10 ${errors.name ? 'border-red-400 focus:border-red-400' : ''}`}
                   required
+                  autoComplete="name"
                 />
               </div>
+              {errors.name && <p className="form-error">{errors.name}</p>}
             </div>
 
             {/* Email */}
             <div>
-              <label className="block text-sm font-semibold mb-2" style={{ color: '#cbc3d7' }}>Email Address</label>
+              <label htmlFor="register-email" className="form-label">Email Address</label>
               <div className="relative">
-                <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#958ea0' }} />
+                <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                 <input
                   id="register-email"
                   type="email"
@@ -118,17 +120,19 @@ export default function RegisterPage() {
                   value={form.email}
                   onChange={onChange}
                   placeholder="admin@yourdomain.com"
-                  className="form-input pl-10"
+                  className={`form-input pl-9 h-10 ${errors.email ? 'border-red-400 focus:border-red-400' : ''}`}
                   required
+                  autoComplete="email"
                 />
               </div>
+              {errors.email && <p className="form-error">{errors.email}</p>}
             </div>
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-semibold mb-2" style={{ color: '#cbc3d7' }}>Password</label>
+              <label htmlFor="register-password" className="form-label">Password</label>
               <div className="relative">
-                <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#958ea0' }} />
+                <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                 <input
                   id="register-password"
                   type={showPw ? 'text' : 'password'}
@@ -136,24 +140,26 @@ export default function RegisterPage() {
                   value={form.password}
                   onChange={onChange}
                   placeholder="Min. 6 characters"
-                  className="form-input pl-10 pr-10"
+                  className={`form-input pl-9 pr-10 h-10 ${errors.password ? 'border-red-400 focus:border-red-400' : ''}`}
                   required
+                  autoComplete="new-password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPw((p) => !p)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2"
-                  style={{ color: '#958ea0' }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
-                  {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                  {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
+              {errors.password && <p className="form-error">{errors.password}</p>}
             </div>
 
+            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary w-full flex items-center justify-center gap-2 py-3 mt-2 text-base"
+              className="btn-primary w-full justify-center h-10 mt-2"
             >
               {loading ? (
                 <>
@@ -162,7 +168,7 @@ export default function RegisterPage() {
                 </>
               ) : (
                 <>
-                  <ShieldCheck size={18} />
+                  <ShieldCheck size={16} />
                   Create Super Admin Account
                 </>
               )}
@@ -170,9 +176,11 @@ export default function RegisterPage() {
           </form>
         </div>
 
-        <p className="text-center text-sm mt-5" style={{ color: '#958ea0' }}>
-          Already have an account?{' '}
-          <Link to="/login" className="font-semibold" style={{ color: '#a78bfa' }}>Sign In</Link>
+        <p className="text-center text-sm text-gray-500 mt-6">
+          Already registered?{' '}
+          <Link to="/login" className="font-semibold text-indigo-600 hover:underline">
+            Sign In
+          </Link>
         </p>
       </div>
     </div>

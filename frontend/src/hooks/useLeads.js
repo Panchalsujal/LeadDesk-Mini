@@ -1,60 +1,55 @@
-// useLeads hook — fetches all leads and handles status updates
-import { useState, useEffect, useCallback } from 'react';
+// useLeads hook — Redux-backed leads management
+import { useCallback, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
 import { fetchLeads, updateLeadStatus } from '../services/lead.service';
+import {
+  setLeads, setLoading, setError, patchLeadStatus,
+  selectLeads, selectLoading, selectError, selectStats,
+} from '../store/leadsSlice';
 
 export function useLeads() {
-  const [leads, setLeads] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const dispatch = useDispatch();
+  const leads   = useSelector(selectLeads);
+  const loading = useSelector(selectLoading);
+  const error   = useSelector(selectError);
+  const stats   = useSelector(selectStats);
 
   const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+    dispatch(setLoading(true));
+    dispatch(setError(null));
     try {
       const data = await fetchLeads();
       if (data.success) {
-        setLeads(data.data);
+        dispatch(setLeads(data.data));
       }
     } catch (err) {
       const msg = err.response?.data?.message || 'Failed to fetch leads.';
-      setError(msg);
+      dispatch(setError(msg));
       toast.error(msg);
     } finally {
-      setLoading(false);
+      dispatch(setLoading(false));
     }
-  }, []);
+  }, [dispatch]);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    if (leads.length === 0) load();
+  }, [load, leads.length]);
 
   const updateStatus = useCallback(async (id, newStatus) => {
     try {
       const data = await updateLeadStatus(id, newStatus);
       if (data.success) {
-        toast.success(`Lead status updated to ${newStatus}`);
-        setLeads((prevLeads) =>
-          prevLeads.map((lead) =>
-            lead._id === id ? { ...lead, status: newStatus } : lead
-          )
-        );
+        dispatch(patchLeadStatus({ id, status: newStatus }));
+        toast.success(`Status updated to ${newStatus}`);
         return true;
       }
     } catch (err) {
-      const msg = err.response?.data?.message || 'Failed to update lead status.';
+      const msg = err.response?.data?.message || 'Failed to update status.';
       toast.error(msg);
       return false;
     }
-  }, []);
-
-  // Derived stats
-  const stats = {
-    total: leads.length,
-    newLeads: leads.filter((l) => l.status === 'NEW').length,
-    contacted: leads.filter((l) => l.status === 'CONTACTED').length,
-    closed: leads.filter((l) => l.status === 'CLOSED').length,
-  };
+  }, [dispatch]);
 
   return { leads, loading, error, stats, refetch: load, updateStatus };
 }

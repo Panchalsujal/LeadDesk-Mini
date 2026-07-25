@@ -1,143 +1,68 @@
-// StatusDropdown component — custom glassmorphism floating dropdown with fixed positioning
+// StatusDropdown — clean white dropdown with indigo active state
 import { useState, useRef, useEffect } from 'react';
-import { createPortal } from 'react-dom';
-import { ChevronDown, Loader2, Check } from 'lucide-react';
+import { ChevronDown, Check } from 'lucide-react';
 
 const STATUSES = [
-  { key: 'NEW', label: 'NEW', badgeClass: 'badge-new' },
-  { key: 'CONTACTED', label: 'CONTACTED', badgeClass: 'badge-contacted' },
-  { key: 'CLOSED', label: 'CLOSED', badgeClass: 'badge-closed' },
+  { value: 'NEW',       label: 'New',       cls: 'badge-new' },
+  { value: 'CONTACTED', label: 'Contacted', cls: 'badge-contacted' },
+  { value: 'CLOSED',    label: 'Closed',    cls: 'badge-closed' },
 ];
 
 export default function StatusDropdown({ leadId, currentStatus, onUpdateStatus }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [updating, setUpdating] = useState(false);
-  const [coords, setCoords] = useState({ top: 0, left: 0 });
-  const buttonRef = useRef(null);
-  const portalRef = useRef(null);
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const ref = useRef(null);
 
-  const activeStatusObj = STATUSES.find((s) => s.key === currentStatus) || STATUSES[0];
+  const current = STATUSES.find((s) => s.value === currentStatus) || STATUSES[0];
 
-  const toggleDropdown = (e) => {
-    e.stopPropagation();
-    if (updating) return;
-
-    if (!isOpen && buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      setCoords({
-        top: rect.bottom + 6,
-        left: rect.left,
-      });
-    }
-    setIsOpen((prev) => !prev);
-  };
-
-  const handleSelect = async (e, newStatus) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (newStatus === currentStatus || updating) {
-      setIsOpen(false);
-      return;
-    }
-
-    setUpdating(true);
-    setIsOpen(false);
-    await onUpdateStatus(leadId, newStatus);
-    setUpdating(false);
-  };
-
-  // Close dropdown on outside click or window scroll/resize
   useEffect(() => {
-    if (!isOpen) return;
-
-    function handleOutsideClick(event) {
-      // Don't close if clicking inside trigger button OR portal dropdown
-      if (
-        (buttonRef.current && buttonRef.current.contains(event.target)) ||
-        (portalRef.current && portalRef.current.contains(event.target))
-      ) {
-        return;
-      }
-      setIsOpen(false);
-    }
-
-    function handleScrollResize() {
-      setIsOpen(false);
-    }
-
-    document.addEventListener('mousedown', handleOutsideClick);
-    window.addEventListener('scroll', handleScrollResize, true);
-    window.addEventListener('resize', handleScrollResize);
-
-    return () => {
-      document.removeEventListener('mousedown', handleOutsideClick);
-      window.removeEventListener('scroll', handleScrollResize, true);
-      window.removeEventListener('resize', handleScrollResize);
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
     };
-  }, [isOpen]);
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const handleSelect = async (status) => {
+    if (status === currentStatus) { setOpen(false); return; }
+    setLoading(true);
+    setOpen(false);
+    await onUpdateStatus(leadId, status);
+    setLoading(false);
+  };
 
   return (
-    <div className="inline-block">
+    <div ref={ref} className="relative inline-block" onClick={(e) => e.stopPropagation()}>
       <button
-        ref={buttonRef}
-        type="button"
-        onClick={toggleDropdown}
-        disabled={updating}
-        className={`${activeStatusObj.badgeClass} inline-flex items-center gap-1.5 cursor-pointer transition-all hover:scale-105 hover:brightness-110 focus:outline-none`}
-        title="Click to update status"
+        onClick={() => setOpen((p) => !p)}
+        disabled={loading}
+        className={`badge ${current.cls} cursor-pointer hover:opacity-80 transition-opacity flex items-center gap-1`}
+        aria-haspopup="listbox"
+        aria-expanded={open}
       >
-        {updating ? (
-          <Loader2 size={12} className="animate-spin" />
+        {loading ? (
+          <span className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
         ) : (
-          <span>{activeStatusObj.label}</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
         )}
-        <ChevronDown
-          size={12}
-          className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-        />
+        {current.label}
+        <ChevronDown size={11} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
-      {isOpen &&
-        createPortal(
-          <div
-            ref={portalRef}
-            className="fixed z-9999 w-40 rounded-xl p-1.5 shadow-2xl animate-fade-in-up"
-            style={{
-              top: `${coords.top}px`,
-              left: `${coords.left}px`,
-              background: '#181b20',
-              border: '1px solid rgba(139, 92, 246, 0.3)',
-              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(139, 92, 246, 0.2)',
-              backdropFilter: 'blur(16px)',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-purple-400/80">
-              Select Status
-            </div>
-            <div className="flex flex-col gap-1 mt-0.5">
-              {STATUSES.map(({ key, label, badgeClass }) => {
-                const isSelected = currentStatus === key;
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={(e) => handleSelect(e, key)}
-                    className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                      isSelected
-                        ? 'bg-purple-500/20 text-purple-200 border border-purple-500/40'
-                        : 'text-gray-300 hover:bg-white/10 hover:text-white'
-                    }`}
-                  >
-                    <span className={badgeClass}>{label}</span>
-                    {isSelected && <Check size={14} className="text-purple-400" />}
-                  </button>
-                );
-              })}
-            </div>
-          </div>,
-          document.body
-        )}
+      {open && (
+        <div className="absolute z-50 top-full left-0 mt-1.5 w-36 card py-1 animate-scale-in">
+          {STATUSES.map((s) => (
+            <button
+              key={s.value}
+              onClick={() => handleSelect(s.value)}
+              className="w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-gray-50 transition-colors"
+            >
+              <span className={`badge ${s.cls} text-xs`}>{s.label}</span>
+              {s.value === currentStatus && <Check size={13} className="text-indigo-600" />}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

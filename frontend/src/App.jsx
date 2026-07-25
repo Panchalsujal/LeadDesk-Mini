@@ -12,6 +12,7 @@ import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/admin/DashboardPage';
 import LeadsPage from './pages/admin/LeadsPage';
 import CreateEmployeePage from './pages/admin/CreateEmployeePage';
+import ProfilePage from './pages/admin/ProfilePage';
 
 export default function App() {
   return (
@@ -21,17 +22,20 @@ export default function App() {
           position="top-right"
           toastOptions={{
             style: {
-              background: '#1d2022',
-              color: '#e0e3e5',
-              border: '1px solid rgba(255,255,255,0.1)',
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              background: '#ffffff',
+              color: '#111827',
+              border: '1px solid #e5e7eb',
+              boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+              fontFamily: "'Inter', sans-serif",
               fontSize: '14px',
+              borderRadius: '0.5rem',
+              padding: '10px 14px',
             },
             success: {
-              iconTheme: { primary: '#a78bfa', secondary: '#1d2022' },
+              iconTheme: { primary: '#4f46e5', secondary: '#ffffff' },
             },
             error: {
-              iconTheme: { primary: '#f87171', secondary: '#1d2022' },
+              iconTheme: { primary: '#ef4444', secondary: '#ffffff' },
             },
           }}
         />
@@ -47,6 +51,7 @@ export default function App() {
             <Route element={<AdminLayout />}>
               <Route path="/admin/dashboard" element={<DashboardPage />} />
               <Route path="/admin/leads" element={<LeadsPage />} />
+              <Route path="/admin/profile" element={<ProfilePage />} />
 
               {/* Super admin only */}
               <Route element={<ProtectedRoute requireSuperAdmin />}>
