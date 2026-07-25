@@ -64,12 +64,16 @@ app.use((req, res, next) => {
   }
   next();
 });
+
 app.use(morgan("dev"));
 app.use(express.json());
 app.use(cookieParser());
 
 app.get("/", (req, res) => {
-  res.send("Welcome to the LeadDesk Mini API");
+  res.status(200).json({
+    success: true,
+    message: "Welcome to the Lead Desk API",
+  });
 });
 
 // Routes for Admin Authentication
