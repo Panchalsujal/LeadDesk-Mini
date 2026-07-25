@@ -273,7 +273,7 @@ export default function LeadCapturePage() {
                 <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
                 <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
                 <div className="flex-1 mx-3 bg-white border border-gray-200 rounded text-xs text-gray-400 px-2 py-1 text-center max-w-xs mx-auto truncate">
-                  app.leaddesk.io/admin/dashboard
+                  https://lead-desk-mini-gold.vercel.app/admin/dashboard
                 </div>
               </div>
               {/* Mock dashboard content */}
@@ -465,9 +465,9 @@ export default function LeadCapturePage() {
 
               <div className="space-y-4">
                 {[
-                  { icon: Mail,    label: 'hello@leaddesk.io' },
-                  { icon: Phone,   label: '+1 (555) 000-0000' },
-                  { icon: MapPin,  label: 'San Francisco, CA' },
+                  { icon: Mail,    label: 'Sujalpanchal249@gail.com' },
+                  { icon: Phone,   label: '+91 7877554558' },
+                  { icon: MapPin,  label: 'Ahmedabad (Gujarat) , India' },
                 ].map(({ icon: Icon, label }) => (
                   <div key={label} className="flex items-center gap-3">
                     <div className="w-9 h-9 bg-indigo-50 rounded-lg flex items-center justify-center shrink-0">
