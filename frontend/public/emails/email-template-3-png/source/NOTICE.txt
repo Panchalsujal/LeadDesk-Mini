@@ -1,3 +1,0 @@
-Image credits
-- Scene illustrations: unDraw (undraw.co), free for commercial use, no attribution required. Colours remapped to the brand palette.
-- 3D icons: Microsoft Fluent Emoji (github.com/microsoft/fluentui-emoji), MIT License.
